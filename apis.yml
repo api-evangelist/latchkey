@@ -1,0 +1,51 @@
+name: Latchkey Jobs API
+description: >-
+  Managed ephemeral GitHub Actions runners that repair failing builds mid-run. The Jobs API gives coding agents and CI
+  systems direct access to a fresh Ubuntu 24.04 x86_64 runner that runs one command and is then destroyed, with a hosted
+  MCP server, CLI, and llms.txt for agent-native access.
+url: https://raw.githubusercontent.com/api-evangelist/latchkey-jobs-api/refs/heads/main/apis.yml
+created: '2026-09-06'
+modified: '2026-09-06'
+specificationVersion: '0.21'
+tags:
+  - CI/CD
+  - DevOps
+  - GitHub Actions
+  - Ephemeral Compute
+  - Build & Test Infrastructure
+  - Agent-Native
+  - AI Coding Agents
+apis:
+  - name: Latchkey Jobs API
+    description: >-
+      REST API for creating, submitting, monitoring, and cancelling ephemeral runner jobs. Each job runs one command on
+      a fresh Ubuntu 24.04 x86_64 machine that is destroyed afterwards. Uses HTTP Bearer auth with a Latchkey API key.
+    humanURL: https://latchkey.dev/documentation/latchkey-cli
+    baseURL: https://api.latchkey.dev
+    tags:
+      - CI/CD
+      - DevOps
+      - GitHub Actions
+      - Ephemeral Compute
+      - Build & Test Infrastructure
+      - Agent-Native
+      - AI Coding Agents
+    properties:
+      - type: OpenAPI
+        url: https://latchkey.dev/openapi.json
+      - type: Documentation
+        url: https://latchkey.dev/documentation/latchkey-cli
+      - type: Documentation
+        url: https://latchkey.dev/documentation/connect-your-ai-agent
+      - type: MCPServer
+        url: https://latchkey.dev/mcp
+      - type: LLMsTxt
+        url: https://latchkey.dev/llms.txt
+maintainers:
+  - FN: Latchkey Jobs API
+    url: https://latchkey.dev/
+generated:
+  by: apis.io/add
+  model: claude-opus-4-8
+  confidence: 95
+  at: '2026-09-06T22:25:46.324Z'
