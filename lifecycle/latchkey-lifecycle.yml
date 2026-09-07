@@ -1,0 +1,26 @@
+generated: '2026-09-07'
+method: searched
+source: https://latchkey.dev/documentation/latchkey-cli + https://latchkey.dev/documentation/runner-limits
+versioning:
+  scheme: none-visible
+  current: 1.0.0
+  note: OpenAPI info.version 1.0.0; no version in URL path or headers, no published versioning policy.
+deprecation:
+  policy_url: null
+  sunset_header: false
+  note: No deprecation policy or Sunset/Deprecation header support found; no deprecated operations in the spec.
+sla:
+  url: null
+  note: No published SLA found.
+status_page: null
+status_page_note: >-
+  No status page found — status.latchkey.dev does not resolve (probed 2026-09-07) and no
+  status link appears on the site, docs, or llms.txt.
+data_retention:
+  - what: job status and logs
+    window: about 24 hours after a job finishes (listJobs still shows older jobs from durable storage)
+  - what: failing step output captured for self-healing diagnosis
+    window: 90 days
+  - what: build cache objects (S3)
+    window: 14 days
+deprecated_operations: []

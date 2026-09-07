@@ -1,0 +1,15 @@
+generated: '2026-09-07'
+method: derived
+source: openapi/latchkey-jobs-api-openapi.json
+summary:
+  types:
+  - http
+schemes:
+- name: latchkeyApiKey
+  type: http
+  scheme: bearer
+  description: 'A Latchkey API key, sent as `Authorization: Bearer lk_live_...`. Create one
+    in the Latchkey dashboard. Scopes: `jobs:read` for getJob, getJobLogs and listJobs; `jobs:run`
+    for createJob, submitJob and cancelJob.'
+  sources:
+  - openapi/latchkey-jobs-api-openapi.json

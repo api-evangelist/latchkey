@@ -1,0 +1,58 @@
+generated: '2026-09-07'
+method: searched
+source: https://latchkey.dev/documentation/latchkey-cli
+name: latchkey
+package: "@latchkeydev/cli"
+version: 0.3.0
+install:
+  - method: npm
+    command: npm install -g @latchkeydev/cli
+    note: Node 20.18.1 or newer. The unscoped `latchkey` npm package is an unrelated project.
+  - method: npx
+    command: npx @latchkeydev/cli
+authentication:
+  method: api-key
+  key_prefix: lk_live_
+  precedence: "--token flag, then LATCHKEY_TOKEN env var, then config saved by `latchkey login` (~/.config/latchkey/config.json, mode 0600)"
+  required_capability: "Allow running CLI jobs (includes reading) — jobs:run scope"
+commands:
+  - command: login
+    description: Validate an API key and save it for this machine; starts nothing billable.
+  - command: run
+    description: >-
+      Pack the current directory into a context archive, run a command on a fresh runner,
+      stream the logs, exit with the command's own exit code. Flags: --size
+      (small|medium|large|xlarge), --env KEY=VALUE, --timeout (30s-2h, default 30m), --detach,
+      --no-context, --output json, --token.
+  - command: list
+    description: List recent jobs, newest first, including ones still running.
+  - command: logs
+    description: Print a job's logs, or tail to completion with --follow.
+  - command: status
+    description: Show a job's state, runner size, timing, and exit code.
+  - command: cancel
+    description: Request cancellation; a running job stops within about 10 seconds.
+  - command: watch
+    description: >-
+      Poll for CI failures self-healing could not fix and hand each one to a coding agent
+      (Claude Code by default, --agent for others), exactly once. --once for a one-shot
+      listing, --no-spawn to print without starting anything. Read-only.
+key_flows:
+  - flow: pre-push verification
+    description: Run the test suite on a clean Linux machine before pushing; the exit code is the verdict.
+  - flow: reproduce CI-only failures
+    description: Clean workspace + fresh installs + Linux reproduces failures that only happen in CI.
+  - flow: agent failure hand-off
+    description: latchkey watch polls unfixed CI failures and spawns a coding agent per failure over MCP.
+exit_codes:
+  - code: 0
+    meaning: command succeeded on the runner
+  - code: 130
+    meaning: job was cancelled
+  - code: 124
+    meaning: job expired (platform timed it out before start)
+context_rules:
+  - .gitignore files inside the packaged tree apply; the .git directory never ships and cannot be re-included
+  - credential-shaped files (.env, private keys, cloud credential files) are held back by a built-in deny-list
+  - a .latchkeyignore file outranks both, and re-including a deny-listed file prints a warning
+agent_skill: skills/latchkey-cli-skill.md

@@ -1,0 +1,22 @@
+generated: '2026-09-07'
+method: searched
+note: >-
+  One first-party package: the Latchkey CLI on npm. Registry metadata read from
+  registry.npmjs.org on 2026-09-07. The unscoped `latchkey` package on npm is an unrelated
+  project (the provider's own docs warn about it). No other first-party client libraries found
+  on npm, PyPI, RubyGems, crates.io, NuGet, Maven Central, Packagist, or pkg.go.dev — the REST
+  surface is called directly or through the MCP server; no language SDKs are shipped.
+packages:
+  - language: javascript
+    registry: npm
+    name: "@latchkeydev/cli"
+    url: https://www.npmjs.com/package/@latchkeydev/cli
+    install: npm install -g @latchkeydev/cli
+    official: true
+    kind: cli
+    version: 0.3.0
+    published: '2026-08-15'
+    repository: https://github.com/latchkey-dev/latchkey
+    note: >-
+      Ships its own Agent Skill (SKILL.md, saved verbatim at skills/latchkey-cli-skill.md).
+      Requires Node 20.18.1+. Binary name: latchkey.

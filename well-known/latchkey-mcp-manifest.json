@@ -1,0 +1,92 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/manifest.json",
+  "schema_version": "2026-03-26",
+  "name": "latchkey",
+  "display_name": "Latchkey",
+  "description": "Self-healing CI/CD for coding agents. Read the CI failures Latchkey could not auto-fix with full diagnostic context, drive GitHub Actions workflows, and run one-off commands on fresh ephemeral runners with no GitHub in the path.",
+  "version": "1.0.0",
+  "vendor": {
+    "name": "Latchkey",
+    "url": "https://latchkey.dev"
+  },
+  "documentation": "https://latchkey.dev/documentation/connect-your-ai-agent",
+  "privacy_policy": "https://latchkey.dev/privacy",
+  "terms_of_service": "https://latchkey.dev/terms",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://latchkey.dev/mcp",
+      "transport": "http",
+      "authentication": {
+        "type": "bearer",
+        "description": "A Latchkey API key sent as `Authorization: Bearer lk_live_...`. Create one in the Latchkey dashboard. The organization is derived from the key, so a key can only ever read its own organization's data.",
+        "token_prefix": "lk_live_",
+        "management_url": "https://latchkey.dev/dashboard"
+      }
+    }
+  ],
+  "when_to_use": "Reach for Latchkey when a CI or build task needs to actually execute somewhere, not just be reasoned about. Best fits: a GitHub Actions run failed and you need the real logs and diagnostic context to fix the cause; you want to verify a change by running the test suite on a clean machine before opening a pull request; you need a build or test command run in isolation without touching the user's laptop or a GitHub Actions queue. Not a fit for hosting long-running services, Windows or macOS builds, or arm64. Latchkey runners are Linux x86_64 only.",
+  "capabilities": {
+    "tools": true,
+    "prompts": true,
+    "resources": false
+  },
+  "tools": [
+    {
+      "name": "list_failed_runs",
+      "description": "List recent CI failures that Latchkey's self-heal could not turn green on its own."
+    },
+    {
+      "name": "get_failure_bundle",
+      "description": "Get the full diagnostic context for one failure: root cause, failing file, and secret-scrubbed logs, ready to fix from.",
+      "notes": "Log text is secret-scrubbed at delivery. The redaction pass has documented residual gaps and is a safety gate rather than a guarantee."
+    },
+    {
+      "name": "get_run_status",
+      "description": "Get status and per-job timing for a workflow run."
+    },
+    {
+      "name": "tail_run_logs",
+      "description": "Read the secret-scrubbed log tail of any completed job."
+    },
+    {
+      "name": "dispatch_workflow",
+      "description": "Trigger a workflow_dispatch run in a monitored repository.",
+      "scope": "mcp:dispatch",
+      "write": true
+    },
+    {
+      "name": "run_job",
+      "description": "Run one command on a fresh Latchkey runner with no workspace and no GitHub in the path.",
+      "scope": "jobs:run",
+      "write": true,
+      "billable": true
+    },
+    {
+      "name": "get_job_status",
+      "description": "Get the lifecycle state of a job started with run_job or the Latchkey CLI.",
+      "scope": "jobs:read"
+    },
+    {
+      "name": "get_job_logs",
+      "description": "Cursor-walk the log chunks of a job started with run_job or the Latchkey CLI.",
+      "scope": "jobs:read"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "fix",
+      "description": "Root-cause and fix a specific CI failure, wrapping the redacted failure bundle."
+    },
+    {
+      "name": "triage_failures",
+      "description": "Breadth-first digest of recent failures to group, prioritise, and route."
+    }
+  ],
+  "related": {
+    "openapi": "https://latchkey.dev/openapi.json",
+    "llms_txt": "https://latchkey.dev/llms.txt",
+    "agent_txt": "https://latchkey.dev/agent.txt",
+    "cli_docs": "https://latchkey.dev/documentation/latchkey-cli"
+  }
+}

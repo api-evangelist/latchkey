@@ -1,0 +1,7 @@
+# Latchkey vulnerability disclosure
+# https://latchkey.dev/documentation/security-architecture
+
+Contact: mailto:security@latchkey.dev
+Preferred-Languages: en
+Canonical: https://latchkey.dev/.well-known/security.txt
+Policy: https://latchkey.dev/documentation/security-architecture

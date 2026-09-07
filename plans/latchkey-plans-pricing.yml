@@ -1,0 +1,64 @@
+generated: '2026-09-07'
+method: searched
+source: https://latchkey.dev/pricing
+plan_count: 4
+currency: USD
+trial: 30-day free trial on every plan, no credit card required; one trial per workspace
+constraint: GitHub organization accounts only — personal accounts are not supported
+plans:
+  - name: Developer
+    price: 5
+    currency: USD
+    billing_period: month
+    included:
+      repositories: 1
+      free_runner_minutes_per_month: 2000
+      seats: 1
+      custom_runner_configurations: 2
+  - name: Launch
+    price: 19
+    currency: USD
+    billing_period: month
+    included:
+      repositories: 10
+      free_runner_minutes_per_month: 4000
+      seats: 1
+      custom_runner_configurations: 2
+    overage:
+      extra_seat_per_month: 5
+  - name: Scale
+    price: 49
+    currency: USD
+    billing_period: month
+    included:
+      repositories: 40
+      free_runner_minutes_per_month: 6000
+      seats: 5
+      custom_runner_configurations: 10
+    overage:
+      extra_seat_per_month: 5
+  - name: Enterprise
+    price: null
+    currency: USD
+    billing_period: custom
+    note: Custom pricing; unlimited custom runner configurations.
+metered_usage:
+  unit: runner minute
+  note: >-
+    Runner minutes are the only metered usage, billed past the plan's free-minute pool,
+    rounded up per job. Analytics and monitoring are unlimited within the repository limit.
+    On a card-less trial, new runner jobs are blocked once free minutes are used.
+  rates:
+    - runner: latchkey-small (2 vCPU / 8 GB)
+      per_minute: 0.0025
+    - runner: latchkey-medium (4 vCPU / 16 GB)
+      per_minute: 0.005
+    - runner: latchkey-large (8 vCPU / 32 GB)
+      per_minute: 0.01
+    - runner: latchkey-xlarge (16 vCPU / 64 GB)
+      per_minute: 0.02
+    - runner: custom configurations
+      per_minute: 0.02
+open_source_program:
+  url: https://latchkey.dev/open-source
+  note: Free Scale plan (6,000 free minutes/month) for any openly licensed public project; applications reviewed by hand.

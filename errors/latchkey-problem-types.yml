@@ -1,0 +1,38 @@
+generated: '2026-09-07'
+method: derived
+source: openapi/latchkey-jobs-api-openapi.json
+format: vendor
+envelope:
+  schema: Error
+  shape: '{"error": "<human-readable description>"}'
+  note: >-
+    Plain JSON error envelope with a single `error` string field — not RFC 9457
+    application/problem+json. api.latchkey.dev also returns {"message":"Not Found"} for
+    unrouted paths (observed 2026-09-07).
+problems:
+  - status: 400
+    title: Bad Request
+    detail: The request was malformed or exceeded a documented limit.
+    source_operations: [createJob, listJobs]
+  - status: 401
+    title: Unauthorized
+    detail: Missing or invalid API key. Also returned when a key was revoked or reached its expiry.
+    source_operations: [createJob, listJobs, getJob, submitJob, getJobLogs, cancelJob]
+  - status: 403
+    title: Forbidden
+    detail: The key is valid but lacks the required scope (jobs:read / jobs:run), or the organization is not entitled.
+    source_operations: [createJob, listJobs, getJob, submitJob, getJobLogs, cancelJob]
+  - status: 404
+    title: Not Found
+    detail: No such job for this organization. Job records expire about 24 hours after a job finishes.
+    source_operations: [getJob, submitJob, getJobLogs, cancelJob]
+  - status: 409
+    title: Conflict
+    detail: >-
+      Job is not in a submittable state — only a job in `created` may be submitted, so a
+      failed or cancelled job can never be resubmitted.
+    source_operations: [submitJob]
+  - status: 429
+    title: Rate Limited
+    detail: Per-organization job creation quota exceeded (120 jobs per hour per workspace).
+    source_operations: [createJob]

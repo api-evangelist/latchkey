@@ -1,0 +1,29 @@
+generated: '2026-09-07'
+method: searched
+source: https://latchkey.dev/documentation/latchkey-cli + https://latchkey.dev/documentation/runner-limits + openapi/latchkey-jobs-api-openapi.json
+limit_count: 3
+limits:
+  - scope: per-workspace
+    what: job creation
+    limit: 120
+    window: 1 hour
+    exhaustion_status: 429
+    note: OpenAPI createJob documents 429 as "Per-organization job creation quota exceeded".
+  - scope: per-workspace
+    what: concurrent busy runners
+    limit: 20
+    window: concurrent
+    note: Idle warm runners do not count; jobs beyond the limit queue. Higher limits available.
+  - scope: per-job
+    what: wall-clock timeout
+    limit: "30s-7200s (API), default 1800s; workflow jobs hard-capped at 4 hours"
+    window: per job
+response_headers: []
+headers_note: >-
+  No rate-limit response headers (X-RateLimit-*, RateLimit-*, Retry-After) are documented
+  anywhere in the docs or the OpenAPI — the only runtime signal is the 429 status itself.
+other_documented_limits:
+  - command line 16,384 characters
+  - environment variables 64 per job (32,768 bytes total)
+  - context upload 200 MB compressed / 1 GiB uncompressed / 250,000 entries
+  - job records readable ~24 hours after completion

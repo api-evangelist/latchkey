@@ -1,0 +1,33 @@
+generated: '2026-09-07'
+method: derived
+source: openapi/latchkey-jobs-api-openapi.json
+entities:
+  - name: Job
+    id_field: job_id
+    id_pattern: "cli-<uuid> (^cli-[0-9a-f]{8}-...)"
+    states: [created, queued, provisioning, running, succeeded, failed, cancelled, expired]
+    terminal_states: [succeeded, failed, cancelled, expired]
+    key_fields: [state, runner_size, timeout_seconds, exit_code, failure_reason, created_at, submitted_at, started_at, completed_at]
+  - name: JobListItem
+    note: durable listing projection of Job — conclusion, command_label (arguments scrubbed), duration_ms
+  - name: JobLogChunk
+    key_fields: [index, content]
+  - name: RunnerSize
+    kind: enum
+    values: [small, medium, large, xlarge]
+relationships:
+  - from: Job
+    to: JobLogChunk
+    kind: has_many
+    via: getJobLogs (cursor-ordered chunks)
+  - from: Job
+    to: RunnerSize
+    kind: has_one
+    via: runner_size
+  - from: Job
+    to: ContextArchive
+    kind: has_one
+    via: context_upload_url (presigned PUT, present only when context_bytes supplied at create)
+notes: >-
+  Single-resource API: the Job is the only addressable entity. Organization/workspace is
+  implicit — derived from the API key — and never appears in the contract.

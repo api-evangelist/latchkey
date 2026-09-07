@@ -3,9 +3,10 @@ description: >-
   Managed ephemeral GitHub Actions runners that repair failing builds mid-run. The Jobs API gives coding agents and CI
   systems direct access to a fresh Ubuntu 24.04 x86_64 runner that runs one command and is then destroyed, with a hosted
   MCP server, CLI, and llms.txt for agent-native access.
-url: https://raw.githubusercontent.com/api-evangelist/latchkey-jobs-api/refs/heads/main/apis.yml
+url: https://raw.githubusercontent.com/api-evangelist/latchkey/refs/heads/main/apis.yml
+image: https://latchkey.dev/og-image.png
 created: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 specificationVersion: '0.21'
 tags:
   - CI/CD
@@ -33,19 +34,90 @@ apis:
     properties:
       - type: OpenAPI
         url: https://latchkey.dev/openapi.json
+      - type: OpenAPI
+        url: openapi/latchkey-jobs-api-openapi.json
       - type: Documentation
         url: https://latchkey.dev/documentation/latchkey-cli
       - type: Documentation
         url: https://latchkey.dev/documentation/connect-your-ai-agent
       - type: MCPServer
         url: https://latchkey.dev/mcp
+      - type: MCPServer
+        url: mcp/latchkey-mcp.yml
+      - type: ToolCrosswalk
+        url: mcp/latchkey-tool-crosswalk.yml
       - type: LLMsTxt
         url: https://latchkey.dev/llms.txt
+      - type: LLMsTxt
+        url: llms/latchkey-llms.txt
 maintainers:
   - FN: Latchkey Jobs API
     url: https://latchkey.dev/
+    email: support@latchkey.dev
 generated:
   by: apis.io/add
   model: claude-opus-4-8
   confidence: 95
   at: '2026-09-06T22:25:46.324Z'
+common:
+- type: Website
+  url: https://latchkey.dev/
+- type: VulnerabilityDisclosure
+  url: security/latchkey-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/latchkey-domain-security.yml
+- type: Authentication
+  url: authentication/latchkey-authentication.yml
+- type: Security
+  url: https://latchkey.dev/documentation/security-architecture
+- type: SecurityTxt
+  url: well-known/latchkey-security.txt
+- type: WellKnown
+  url: well-known/latchkey-well-known.yml
+- type: Packages
+  url: packages/latchkey-packages.yml
+- type: CLI
+  url: cli/latchkey-cli.yml
+- type: Conventions
+  url: conventions/latchkey-conventions.yml
+- type: Idempotency
+  url: conventions/latchkey-conventions.yml
+- type: ErrorCatalog
+  url: errors/latchkey-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/latchkey-lifecycle.yml
+- type: Conformance
+  url: conformance/latchkey-conformance.yml
+- type: DataModel
+  url: data-model/latchkey-data-model.yml
+- type: Overlay
+  url: overlays/latchkey-jobs-api-overlay.yaml
+- type: Plans
+  url: plans/latchkey-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/latchkey-rate-limits.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Documentation
+  url: https://latchkey.dev/documentation
+- type: GettingStarted
+  url: https://latchkey.dev/documentation/quickstart
+- type: Support
+  url: https://latchkey.dev/support
+- type: Blog
+  url: https://latchkey.dev/blog
+- type: Pricing
+  url: https://latchkey.dev/pricing
+- type: TermsOfService
+  url: https://latchkey.dev/terms
+- type: PrivacyPolicy
+  url: https://latchkey.dev/privacy
+- type: Login
+  url: https://latchkey.dev/dashboard
+- type: GitHubOrganization
+  url: https://github.com/latchkey-dev
+x-enrichment:
+  date: '2026-09-07'
+  status: enriched
+  artifacts_added: 25
+  pass: local-v3

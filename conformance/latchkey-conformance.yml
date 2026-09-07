@@ -1,0 +1,37 @@
+generated: '2026-09-07'
+method: derived
+source: openapi/latchkey-jobs-api-openapi.json + https://latchkey.dev/documentation/security-architecture
+standards:
+  - id: oauth2
+    conforms: false
+    evidence: securitySchemes declare http bearer with an API key (lk_live_ prefix), not OAuth 2.0
+  - id: oidc
+    conforms: false
+    evidence: /.well-known/openid-configuration is a soft-404 HTML shell; no OIDC surface
+  - id: rfc9457-problem-details
+    conforms: false
+    evidence: 'errors use a vendor {"error": string} envelope, not application/problem+json'
+  - id: pagination
+    conforms: true
+    evidence: getJobLogs uses cursor pagination (cursor param, next_cursor/complete response fields)
+  - id: idempotency
+    conforms: partial
+    evidence: >-
+      cancelJob documented idempotent; submitJob replay-guarded by state machine (409); no
+      Idempotency-Key mechanism on createJob — see conventions/latchkey-conventions.yml
+  - id: rfc9116-security-txt
+    conforms: true
+    evidence: https://latchkey.dev/.well-known/security.txt served with Contact, Policy, Canonical (HTTP 200, 2026-09-07)
+  - id: mcp
+    conforms: true
+    evidence: >-
+      hosted MCP server (streamable-http) at https://latchkey.dev/mcp with a published
+      manifest at /.well-known/mcp/manifest.json, schema_version 2026-03-26
+  - id: llms-txt
+    conforms: true
+    evidence: https://latchkey.dev/llms.txt served (HTTP 200, 2026-09-07), llms.txt format
+compliance_note: >-
+  No certification program (SOC 2, ISO 27001, etc.) is published. The security architecture
+  page (https://latchkey.dev/documentation/security-architecture) documents the isolation,
+  encryption, and credential model in security-review depth but names no audits or
+  certifications, so no Compliance pointer is emitted.

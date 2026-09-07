@@ -1,0 +1,29 @@
+# Latchkey
+> AI-powered CI/CD monitoring and managed self-healing runners for GitHub Actions. Cost analytics, pipeline failure detection, and auto-fix PRs.
+
+## Learn
+- [CI/CD error guides and concepts](https://latchkey.dev/learn): a library of CI/CD error fixes and concepts across GitHub Actions, Docker, Node, Python, Go, and more (44 areas).
+
+## GitHub Actions directory
+- [GitHub Actions directory](https://latchkey.dev/learn/actions): look up any GitHub Action's inputs, outputs, usage examples, common errors, and how to pin it safely to a commit SHA.
+- [Industry reports](https://latchkey.dev/learn/reports): 100 data-backed reports on CI/CD cost, runner economics, and DevOps reliability.
+
+## When to use Latchkey
+Reach for Latchkey when a CI or build task needs to actually execute somewhere, not just be reasoned about.
+
+- A GitHub Actions run failed and you need the real logs and root cause to fix it: `get_failure_bundle` over MCP.
+- You want to verify a change by running the test suite on a clean machine before opening a pull request: `run_job` over MCP, or the Latchkey CLI.
+- You need a build or test command run in isolation, without touching the local machine and without queueing on GitHub Actions.
+- An existing workflow is slow or expensive on GitHub-hosted runners: change `runs-on: ubuntu-latest` to `runs-on: latchkey-small`.
+
+Not a fit for: hosting long-running services, Windows or macOS builds, or arm64. Latchkey runners are Linux x86_64 only.
+
+## How an agent calls Latchkey
+- MCP server (8 tools, 2 prompts): https://latchkey.dev/mcp, bearer auth with a Latchkey API key. Setup: https://latchkey.dev/documentation/connect-your-ai-agent
+- REST: [OpenAPI 3.1 spec](https://latchkey.dev/openapi.json) for the Jobs API at https://api.latchkey.dev.
+- CLI: https://latchkey.dev/documentation/latchkey-cli
+- Agent instructions: [agent.txt](https://latchkey.dev/agent.txt)
+- Markdown: every content page has a markdown twin at the same URL plus `.md` (roughly 15x fewer tokens than the HTML). Hub and index pages do not.
+
+## Full index
+- [llms-full.txt](https://latchkey.dev/llms-full.txt): every Learn page with its title, URL, and one-line summary.

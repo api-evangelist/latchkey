@@ -1,0 +1,46 @@
+# generated: 2026-09-07 | method: generated | source: openapi/latchkey-jobs-api-openapi.json
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the Latchkey Jobs API
+  version: 1.0.0
+extends: openapi/latchkey-jobs-api-openapi.json
+actions:
+  - target: $.info
+    update:
+      x-apievangelist:
+        slug: latchkey
+        profiled: '2026-09-07'
+        artifacts:
+          conventions: conventions/latchkey-conventions.yml
+          errors: errors/latchkey-problem-types.yml
+          rate-limits: rate-limits/latchkey-rate-limits.yml
+          mcp: mcp/latchkey-mcp.yml
+          tool-crosswalk: mcp/latchkey-tool-crosswalk.yml
+  - target: $.paths['/jobs'].post
+    update:
+      x-rate-limit:
+        scope: per-workspace
+        limit: 120
+        window: 1h
+        exhaustion_status: 429
+      x-idempotency:
+        supported: false
+        note: a retried create makes a second job; no Idempotency-Key mechanism
+  - target: $.paths['/jobs/{id}/submit'].post
+    update:
+      x-idempotency:
+        supported: replay-guarded
+        note: only state `created` may be submitted; a replayed submit returns 409
+      x-reversibility:
+        reversal_operation: cancelJob
+        window: any time before the job reaches a terminal state
+  - target: $.paths['/jobs/{id}/cancel'].post
+    update:
+      x-idempotency:
+        supported: true
+        note: documented "Cancellation is idempotent"
+  - target: $.components.securitySchemes.latchkeyApiKey
+    update:
+      x-scopes:
+        - jobs:read
+        - jobs:run

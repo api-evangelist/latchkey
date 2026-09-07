@@ -1,0 +1,22 @@
+generated: '2026-09-07'
+method: searched
+note: >-
+  Two of the three skills are provider-published and saved verbatim (searched); the Jobs API
+  skill is generated from the catalog's OpenAPI and conventions artifacts.
+skills:
+  - file: latchkey-cli-skill.md
+    name: latchkey-cli
+    method: searched
+    source: SKILL.md shipped inside the @latchkeydev/cli 0.3.0 npm package (registry.npmjs.org tarball)
+    description: Run shell commands on fresh Latchkey Linux runners and watch for CI failures self-heal could not fix.
+  - file: latchkey-ci-doctor.md
+    name: ci-doctor
+    method: searched
+    source: https://github.com/latchkey-dev/CI-Doctor (SKILL.md, main branch, MIT license)
+    description: Diagnose and fix failing CI/CD pipelines; built from the Latchkey Learn knowledge base.
+  - file: latchkey-run-and-verify-job.md
+    name: latchkey-run-and-verify-job
+    method: generated
+    api: openapi/latchkey-jobs-api-openapi.json
+    operations: [createJob, submitJob, getJob, getJobLogs, cancelJob, listJobs]
+    description: Run one command on a fresh runner over the REST Jobs API and stream the verdict.

@@ -1,0 +1,71 @@
+generated: '2026-09-07'
+method: searched
+status: published
+source: https://latchkey.dev/.well-known/mcp/manifest.json
+deployment:
+  mode: remote
+  endpoint: https://latchkey.dev/mcp
+  auth: api-key
+  verified: probed
+  note: >-
+    Anonymous POST of tools/list to https://latchkey.dev/mcp returned HTTP 401
+    {"error":"Invalid or missing API key"} on 2026-09-07 — the endpoint is live and the live
+    tool schemas are auth-gated. Tool list below is from the provider's published manifest at
+    /.well-known/mcp/manifest.json (schema_version 2026-03-26); inputSchemas need authenticated
+    introspection. Auth is a Latchkey API key (prefix lk_live_) sent as a bearer token, minted
+    in the dashboard at https://latchkey.dev/dashboard.
+server:
+  name: latchkey
+  display_name: Latchkey
+  transport: streamable-http
+  url: https://latchkey.dev/mcp
+  manifest: well-known/latchkey-mcp-manifest.json
+  documentation: https://latchkey.dev/documentation/connect-your-ai-agent
+  capabilities:
+    tools: true
+    prompts: true
+    resources: false
+tools:
+  - name: list_failed_runs
+    description: List recent CI failures that Latchkey's self-heal could not turn green on its own.
+  - name: get_failure_bundle
+    description: >-
+      Get the full diagnostic context for one failure: root cause, failing file, and
+      secret-scrubbed logs, ready to fix from.
+  - name: get_run_status
+    description: Get status and per-job timing for a workflow run.
+  - name: tail_run_logs
+    description: Read the secret-scrubbed log tail of any completed job.
+  - name: dispatch_workflow
+    description: Trigger a workflow_dispatch run in a monitored repository.
+    scope: mcp:dispatch
+    write: true
+  - name: run_job
+    description: Run one command on a fresh Latchkey runner with no workspace and no GitHub in the path.
+    scope: jobs:run
+    write: true
+    billable: true
+  - name: get_job_status
+    description: Get the lifecycle state of a job started with run_job or the Latchkey CLI.
+    scope: jobs:read
+  - name: get_job_logs
+    description: Cursor-walk the log chunks of a job started with run_job or the Latchkey CLI.
+    scope: jobs:read
+prompts:
+  - name: fix
+    description: Root-cause and fix a specific CI failure, wrapping the redacted failure bundle.
+  - name: triage_failures
+    description: Breadth-first digest of recent failures to group, prioritise, and route.
+security_model:
+  default: read-only
+  scopes:
+    - scope: jobs:read
+      grants: get_job_status, get_job_logs (and CLI job status/logs)
+    - scope: jobs:run
+      grants: run_job — bills runner minutes; includes jobs:read
+    - scope: mcp:dispatch
+      grants: dispatch_workflow — can trigger any dispatchable workflow in monitored repositories
+  notes: >-
+    Keys are workspace-scoped (workspace derived from the key), shown once at creation, stored
+    server-side as a SHA-256 hash only, and revocable at any time. Write capabilities are
+    per-key opt-ins fixed at creation.

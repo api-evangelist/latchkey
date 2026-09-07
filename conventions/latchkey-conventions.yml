@@ -1,0 +1,78 @@
+generated: '2026-09-07'
+method: searched
+source: https://latchkey.dev/documentation/latchkey-cli + https://latchkey.dev/documentation/connect-your-ai-agent + openapi/latchkey-jobs-api-openapi.json
+authentication:
+  style: bearer api-key
+  header: "Authorization: Bearer lk_live_..."
+  scopes: [jobs:read, jobs:run, mcp:dispatch]
+  notes: >-
+    Keys are workspace-scoped and read-only by default; jobs:run and mcp:dispatch are per-key
+    opt-ins fixed at creation. See authentication/latchkey-authentication.yml.
+idempotency:
+  coverage: partial
+  scope: [cancelJob, submitJob]
+  header: null
+  notes: >-
+    No Idempotency-Key mechanism exists on any operation. cancelJob is documented as
+    idempotent ("Cancellation is idempotent" — repeat calls are safe). submitJob is replay-
+    guarded by the job state machine: only a job in `created` may be submitted, and a replayed
+    submit returns 409, so a job can never be enqueued twice. createJob has no replay
+    protection — a retried create makes a second job.
+pagination:
+  style: cursor (logs) / limit-only (listing)
+  params:
+    - operation: getJobLogs
+      param: cursor
+      response_fields: [next_cursor, complete]
+      note: poll with next_cursor until complete is true to stream a running job's output
+    - operation: listJobs
+      param: limit
+      note: 1-100, default 20, newest first; no cursor — a single recent page
+error_envelope:
+  shape: '{"error": "<string>"}'
+  reference: errors/latchkey-problem-types.yml
+versioning:
+  scheme: none-visible
+  note: >-
+    No version in the URL path or a version header; spec info.version is 1.0.0. No public
+    deprecation or versioning policy found.
+request_tracing: null
+field_expansion: null
+rate_limit_signaling:
+  status: 429
+  headers: []
+  note: >-
+    429 on the per-organization job-creation quota (120 jobs/hour/workspace); no rate-limit
+    response headers are documented. See rate-limits/latchkey-rate-limits.yml.
+reversibility:
+  grade: verified
+  write_surface:
+    - operation: createJob
+      reversal: none-needed
+      note: creating a job starts nothing and bills nothing; an unsubmitted job simply expires
+    - operation: submitJob
+      reversal: cancelJob
+      window: >-
+        any time before the job reaches a terminal state; a job that has not started is
+        cancelled immediately, a running job is signalled and stops within about 10 seconds
+        (docs: "latchkey cancel — Request cancellation; a running job stops within about 10
+        seconds"). A submitted job that never starts is expired by the platform after one hour.
+      docs: https://latchkey.dev/documentation/latchkey-cli
+    - operation: cancelJob
+      reversal: none
+      note: >-
+        cancellation is terminal — a cancelled job can never be resubmitted (submitJob
+        requires state `created` and returns 409 otherwise); create a new job instead
+    - surface: dispatch_workflow (MCP)
+      reversal: none-via-latchkey
+      note: a dispatched GitHub Actions run must be cancelled on the GitHub side
+  notes: >-
+    Runners are single-use and destroyed after every job, so there is no persistent state to
+    roll back; the money dimension is bounded by the job timeout (max 2h CLI / 4h workflow)
+    and cancellation. Billing runs from command start to job end; queue and provisioning time
+    is never billed.
+cross_links:
+  errors: errors/latchkey-problem-types.yml
+  authentication: authentication/latchkey-authentication.yml
+  lifecycle: lifecycle/latchkey-lifecycle.yml
+  rate_limits: rate-limits/latchkey-rate-limits.yml

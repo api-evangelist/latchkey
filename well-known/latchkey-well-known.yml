@@ -1,0 +1,101 @@
+generated: '2026-09-07'
+method: searched
+note: >-
+  latchkey.dev serves a real RFC 9116 security.txt and an MCP server descriptor at
+  /.well-known/mcp/manifest.json. Every other well-known path 302s to /404.html or returns the
+  93,408-byte HTML homepage shell (recorded as soft-404, not a document). www.latchkey.dev 301s
+  to the apex; api.latchkey.dev returns clean JSON 404s for every path. The negative-control
+  path 302'd on latchkey.dev and 404'd on api.latchkey.dev, so no path-echo behavior.
+path_echo_control: passed
+hosts:
+  - host: https://latchkey.dev
+    documents:
+      - path: /.well-known/security.txt
+        status: 200
+        file: latchkey-security.txt
+      - path: /.well-known/mcp/manifest.json
+        status: 200
+        file: latchkey-mcp-manifest.json
+      - path: /.well-known/openid-configuration
+        status: 200
+        note: soft-404 — HTML homepage shell (93,408 bytes), not a document
+      - path: /.well-known/oauth-authorization-server
+        status: 200
+        note: soft-404 — HTML homepage shell, not a document
+      - path: /.well-known/oauth-protected-resource
+        status: 200
+        note: soft-404 — HTML homepage shell, not a document
+      - path: /.well-known/api-catalog
+        status: 200
+        note: soft-404 — HTML homepage shell, not a document
+      - path: /.well-known/api-catalog.json
+        status: 302
+        note: redirects to /404.html
+      - path: /.well-known/ai-plugin.json
+        status: 302
+        note: redirects to /404.html
+      - path: /.well-known/ucp.json
+        status: 302
+        note: redirects to /404.html
+      - path: /.well-known/acp.json
+        status: 302
+        note: redirects to /404.html
+      - path: /.well-known/aauth-resource.json
+        status: 302
+        note: redirects to /404.html
+      - path: /.well-known/apis.json
+        status: 302
+        note: redirects to /404.html
+      - path: /apis.json
+        status: 302
+        note: redirects to /404.html — the PROFILE-advertised catalog file does not exist
+      - path: /apis.yml
+        status: 200
+        note: soft-404 — HTML homepage shell, not a document
+      - path: /.well-known/agent-card.json
+        status: 302
+        note: redirects to /404.html — no A2A agent card
+      - path: /.well-known/agent.json
+        status: 302
+        note: redirects to /404.html — no legacy A2A agent card
+      - path: /.well-known/latchkey-negative-control-9c4e2ab1.json
+        status: 302
+        note: negative control — correctly misses
+  - host: https://api.latchkey.dev
+    documents:
+      - path: /.well-known/security.txt
+        status: 404
+      - path: /.well-known/openid-configuration
+        status: 404
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+      - path: /.well-known/oauth-protected-resource
+        status: 404
+      - path: /.well-known/api-catalog
+        status: 404
+      - path: /.well-known/ai-plugin.json
+        status: 404
+      - path: /.well-known/ucp.json
+        status: 404
+      - path: /.well-known/acp.json
+        status: 404
+      - path: /.well-known/aauth-resource.json
+        status: 404
+      - path: /.well-known/apis.json
+        status: 404
+      - path: /apis.json
+        status: 404
+      - path: /apis.yml
+        status: 404
+      - path: /.well-known/agent-card.json
+        status: 404
+      - path: /.well-known/agent.json
+        status: 404
+      - path: /.well-known/latchkey-negative-control-9c4e2ab1.json
+        status: 404
+        note: negative control — correctly misses
+  - host: https://www.latchkey.dev
+    documents:
+      - path: /.well-known/security.txt
+        status: 301
+        note: every www path 301s to the apex host; probed there instead

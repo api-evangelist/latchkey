@@ -1,0 +1,56 @@
+# Latchkey - agent instructions
+
+Latchkey runs CI/CD for you. Managed ephemeral Linux runners that detect, diagnose and
+repair failing build steps while the job is still running, plus a jobs API and an MCP
+server so a coding agent can execute and verify work directly.
+
+## When to use this service
+
+Use Latchkey when a build or test command needs to actually run somewhere:
+
+- Fix a failed CI run. Pull the real logs and root cause rather than guessing from a red X.
+- Verify your own work before opening a pull request. Run the suite on a clean machine.
+- Run a command in isolation, without touching the user machine or queueing on GitHub Actions.
+- Cut CI cost or cold-start time on an existing GitHub Actions workflow.
+
+Do not use Latchkey for: hosting long-running services, Windows or macOS builds, or arm64.
+Runners are Ubuntu 24.04 x86_64 only. Mixed workflows are fine - keep those jobs on
+GitHub-hosted runners and move the Linux ones.
+
+## How to call it
+
+- MCP (preferred for agents): POST https://latchkey.dev/mcp
+  Streamable HTTP, JSON-RPC 2.0. 8 tools and 2 prompts.
+  Auth: Authorization: Bearer <latchkey api key>
+  Setup: https://latchkey.dev/documentation/connect-your-ai-agent
+
+- REST (Jobs API): https://api.latchkey.dev
+  OpenAPI 3.1 spec: https://latchkey.dev/openapi.json
+  Auth: Authorization: Bearer <latchkey api key>
+  Scopes: jobs:read for status and logs, jobs:run for create, submit and cancel.
+
+- CLI: https://latchkey.dev/documentation/latchkey-cli
+
+- In a GitHub Actions workflow: change runs-on: ubuntu-latest to runs-on: latchkey-small.
+
+## Getting credentials
+
+API keys are created by the account owner in the Latchkey dashboard at
+https://latchkey.dev/dashboard. Do not attempt to create an account or a key on a user's behalf.
+
+## Reading our content cheaply
+
+Every content page has a markdown twin at the same URL plus .md: Learn articles and
+reports, documentation, the Actions directory, workflow pages, blog posts and marketing
+pages, in English and in ja/pt. Hub and index pages do not have one.
+It carries the same content without the page markup, which is roughly 15x fewer tokens.
+Example: https://latchkey.dev/learn/github-actions/gha-yaml-invalid-workflow-file.md
+Each HTML page also advertises its twin via <link rel="alternate" type="text/markdown">.
+
+## Machine-readable index
+
+- https://latchkey.dev/openapi.json                      REST surface, OpenAPI 3.1
+- https://latchkey.dev/.well-known/mcp/manifest.json     MCP server descriptor
+- https://latchkey.dev/llms.txt                          site and content index
+- https://latchkey.dev/llms-full.txt                     every Learn page
+- https://latchkey.dev/sitemap.xml                       sitemap index

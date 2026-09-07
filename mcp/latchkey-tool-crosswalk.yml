@@ -1,0 +1,57 @@
+generated: '2026-09-07'
+method: derived
+source: well-known/latchkey-mcp-manifest.json + openapi/latchkey-jobs-api-openapi.json
+note: >-
+  Live MCP tools/list is auth-gated (401), so bindings are mapped by name and documented
+  semantics from the provider's published manifest and docs. The MCP server fronts TWO
+  surfaces: the public Jobs API (OpenAPI-described, api.latchkey.dev) and the CI-monitoring
+  surface (failed runs, failure bundles, workflow dispatch) which has no public REST contract.
+surfaces:
+  openapi: openapi/latchkey-jobs-api-openapi.json
+  graphql: null
+  mcp:
+    url: https://latchkey.dev/mcp
+    gated: true
+    note: tools/list requires a Latchkey API key; manifest at /.well-known/mcp/manifest.json is public
+crosswalk:
+  - tool: run_job
+    category: jobs
+    rest: [createJob, submitJob]
+    binding: rest
+    confidence: high
+    note: >-
+      One tool wraps the two-step REST flow: createJob reserves the job, submitJob enqueues it.
+      The MCP tool starts from an empty workspace (no context upload); shipping a working tree
+      is the CLI's job via the presigned context_upload_url from createJob.
+  - tool: get_job_status
+    category: jobs
+    rest: [getJob]
+    binding: rest
+    confidence: high
+  - tool: get_job_logs
+    category: jobs
+    rest: [getJobLogs]
+    binding: rest
+    confidence: high
+mcp_only:
+  - tool: list_failed_runs
+    reason: CI-monitoring surface (GitHub Actions failures) — no public REST operation
+  - tool: get_failure_bundle
+    reason: CI-monitoring surface — diagnosis bundles have no public REST operation
+  - tool: get_run_status
+    reason: CI-monitoring surface — workflow run status has no public REST operation
+  - tool: tail_run_logs
+    reason: CI-monitoring surface — workflow job logs have no public REST operation
+  - tool: dispatch_workflow
+    reason: CI-monitoring surface — workflow_dispatch trigger (mcp:dispatch scope), no public REST operation
+rest_only:
+  - operation: listJobs
+    capability: list recent jobs for the organization (CLI `latchkey list`)
+  - operation: cancelJob
+    capability: request job cancellation — docs state cancelling is a CLI/REST action, not an MCP tool
+coverage:
+  mcp_tools: 8
+  tools_bound_to_rest: 3
+  mcp_only: 5
+  rest_operations: 6
+  rest_operations_with_tool: 4
