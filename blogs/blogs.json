@@ -1,0 +1,14 @@
+{
+  "repo": "latchkey",
+  "feeds": [
+    {
+      "source": "https://latchkey.dev/support",
+      "feed_url": "https://latchkey.dev/support",
+      "title": "",
+      "saved": 0,
+      "method": "none"
+    }
+  ],
+  "post_count": 0,
+  "fetched": "2026-09-13T13:00:00Z"
+}

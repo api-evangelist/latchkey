@@ -14,43 +14,39 @@ tags:
   - GitHub Actions
   - Ephemeral Compute
   - Build & Test Infrastructure
+  - agent-native
+  - AI Coding Agents
+  - Developer Tools
+tags_raw:
+  - CI/CD
+  - DevOps
+  - GitHub Actions
+  - Ephemeral Compute
+  - Build & Test Infrastructure
   - Agent-Native
   - AI Coding Agents
   - Developer Tools
 apis:
-  - name: Latchkey Jobs API
-    description: >-
-      REST API for creating, submitting, monitoring, and cancelling ephemeral runner jobs. Each job runs one command on
-      a fresh Ubuntu 24.04 x86_64 machine that is destroyed afterwards. Uses HTTP Bearer auth with a Latchkey API key.
-    humanURL: https://latchkey.dev/documentation/latchkey-cli
-    baseURL: https://api.latchkey.dev
-    tags:
-      - CI/CD
-      - DevOps
-      - GitHub Actions
-      - Ephemeral Compute
-      - Build & Test Infrastructure
-      - Agent-Native
-      - AI Coding Agents
-    properties:
-      - type: OpenAPI
-        url: https://latchkey.dev/openapi.json
-      - type: OpenAPI
-        url: openapi/latchkey-jobs-api-openapi.json
-      - type: Documentation
-        url: https://latchkey.dev/documentation/latchkey-cli
-      - type: Documentation
-        url: https://latchkey.dev/documentation/connect-your-ai-agent
-      - type: MCPServer
-        url: https://latchkey.dev/mcp
-      - type: MCPServer
-        url: mcp/latchkey-mcp.yml
-      - type: ToolCrosswalk
-        url: mcp/latchkey-tool-crosswalk.yml
-      - type: LLMsTxt
-        url: https://latchkey.dev/llms.txt
-      - type: LLMsTxt
-        url: llms/latchkey-llms.txt
+- aid: latchkey:latchkey-jobs-api
+  name: Latchkey Jobs API Jobs API
+  description: Create, submit, observe and cancel runner jobs.
+  humanURL: https://latchkey.dev/documentation/latchkey-cli
+  baseURL: https://api.latchkey.dev
+  tags:
+  - Jobs
+  properties:
+  - type: OpenAPI
+    url: openapi/latchkey-jobs-api-openapi.yml
+  - type: Documentation
+    url: https://latchkey.dev/documentation/latchkey-cli
+  - type: Documentation
+    url: https://latchkey.dev/documentation/connect-your-ai-agent
+  - type: ToolCrosswalk
+    url: mcp/latchkey-tool-crosswalk.yml
+  - type: LLMsTxt
+    url: https://latchkey.dev/llms.txt
+  - type: LLMsTxt
+    url: llms/latchkey-llms.txt
 maintainers:
   - FN: Latchkey Jobs API
     url: https://latchkey.dev/
@@ -61,6 +57,10 @@ generated:
   confidence: 95
   at: '2026-09-06T22:25:46.324Z'
 common:
+- type: MCPServer
+  url: https://latchkey.dev/mcp
+- type: MCPServer
+  url: mcp/latchkey-mcp.yml
 - type: Website
   url: https://latchkey.dev/
 - type: VulnerabilityDisclosure
