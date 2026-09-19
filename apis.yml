@@ -33,6 +33,8 @@ apis:
   humanURL: https://latchkey.dev/documentation/latchkey-cli
   baseURL: https://api.latchkey.dev
   tags:
+  - Job
+  tags_raw:
   - Jobs
   properties:
   - type: OpenAPI
