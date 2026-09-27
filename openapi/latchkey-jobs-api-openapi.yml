@@ -181,122 +181,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  responses:
-    BadRequest:
-      description: The request was malformed or exceeded a documented limit.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: No such job for this organization.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Missing or invalid API key.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Forbidden:
-      description: The key is valid but lacks the required scope, or the organization is not entitled.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    RateLimited:
-      description: Per-organization job creation quota exceeded.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    SubmitJobResponse:
-      type: object
-      required:
-      - job_id
-      - state
-      properties:
-        job_id:
-          type: string
-          description: Identifier of the submitted job.
-        state:
-          $ref: '#/components/schemas/JobState'
-        context_present:
-          type:
-          - boolean
-          - 'null'
-          description: Whether a context archive was found for this job.
-    JobListResponse:
-      type: object
-      required:
-      - jobs
-      properties:
-        jobs:
-          type: array
-          description: Jobs, newest first.
-          items:
-            $ref: '#/components/schemas/JobListItem'
-    CreateJobRequest:
-      type: object
-      required:
-      - command
-      - runner_size
-      properties:
-        command:
-          type: string
-          maxLength: 16384
-          description: The single shell command to run on the runner.
-          examples:
-          - npm ci && npm test
-        runner_size:
-          $ref: '#/components/schemas/RunnerSize'
-        env:
-          type: object
-          additionalProperties:
-            type: string
-          description: Environment variables for the command. At most 64 keys and 32768 bytes total.
-          maxProperties: 64
-        timeout_seconds:
-          type: integer
-          minimum: 30
-          maximum: 7200
-          default: 1800
-          description: Wall-clock limit for the command.
-        context_bytes:
-          type: integer
-          minimum: 1
-          maximum: 209715200
-          description: Byte length of the gzipped tar archive you intend to upload. Supplying it returns a presigned upload URL bound to this exact length.
-    CancelJobResponse:
-      type: object
-      required:
-      - job_id
-      - state
-      - cancel_requested
-      properties:
-        job_id:
-          type: string
-          description: Identifier of the job.
-        state:
-          $ref: '#/components/schemas/JobState'
-        cancel_requested:
-          type: boolean
-          description: Always true once cancellation has been recorded.
-    JobLogChunk:
-      type: object
-      required:
-      - index
-      - content
-      properties:
-        index:
-          type: integer
-          description: Zero-based chunk index.
-        content:
-          type: string
-          description: Raw log text for this chunk.
     JobStatusResponse:
       type: object
       required:
@@ -347,56 +232,16 @@ components:
           - string
           - 'null'
           format: date-time
-    CreateJobResponse:
+    JobListResponse:
       type: object
       required:
-      - job_id
+      - jobs
       properties:
-        job_id:
-          type: string
-          description: Identifier for the new job.
-        context_upload_url:
-          type: string
-          format: uri
-          description: Presigned PUT URL for the context archive. Present only when `context_bytes` was supplied. Upload with Content-Type `application/gzip` before calling submitJob.
-    JobLogsResponse:
-      type: object
-      required:
-      - chunks
-      - next_cursor
-      - complete
-      properties:
-        chunks:
+        jobs:
           type: array
-          description: Ordered log chunks from the requested cursor.
+          description: Jobs, newest first.
           items:
-            $ref: '#/components/schemas/JobLogChunk'
-        next_cursor:
-          type: integer
-          description: Cursor to pass on the next poll.
-        complete:
-          type: boolean
-          description: True once the job is terminal and all logs have been returned.
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-          description: Human-readable description of the problem.
-    JobState:
-      type: string
-      description: Job lifecycle state. `succeeded`, `failed`, `cancelled` and `expired` are terminal.
-      enum:
-      - created
-      - queued
-      - provisioning
-      - running
-      - succeeded
-      - failed
-      - cancelled
-      - expired
+            $ref: '#/components/schemas/JobListItem'
     JobListItem:
       type: object
       required:
@@ -434,6 +279,110 @@ components:
           - string
           - 'null'
           format: date-time
+    JobLogChunk:
+      type: object
+      required:
+      - index
+      - content
+      properties:
+        index:
+          type: integer
+          description: Zero-based chunk index.
+        content:
+          type: string
+          description: Raw log text for this chunk.
+    JobLogsResponse:
+      type: object
+      required:
+      - chunks
+      - next_cursor
+      - complete
+      properties:
+        chunks:
+          type: array
+          description: Ordered log chunks from the requested cursor.
+          items:
+            $ref: '#/components/schemas/JobLogChunk'
+        next_cursor:
+          type: integer
+          description: Cursor to pass on the next poll.
+        complete:
+          type: boolean
+          description: True once the job is terminal and all logs have been returned.
+    SubmitJobResponse:
+      type: object
+      required:
+      - job_id
+      - state
+      properties:
+        job_id:
+          type: string
+          description: Identifier of the submitted job.
+        state:
+          $ref: '#/components/schemas/JobState'
+        context_present:
+          type:
+          - boolean
+          - 'null'
+          description: Whether a context archive was found for this job.
+    CreateJobRequest:
+      type: object
+      required:
+      - command
+      - runner_size
+      properties:
+        command:
+          type: string
+          maxLength: 16384
+          description: The single shell command to run on the runner.
+          examples:
+          - npm ci && npm test
+        runner_size:
+          $ref: '#/components/schemas/RunnerSize'
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: Environment variables for the command. At most 64 keys and 32768 bytes total.
+          maxProperties: 64
+        timeout_seconds:
+          type: integer
+          minimum: 30
+          maximum: 7200
+          default: 1800
+          description: Wall-clock limit for the command.
+        context_bytes:
+          type: integer
+          minimum: 1
+          maximum: 209715200
+          description: Byte length of the gzipped tar archive you intend to upload. Supplying it returns a presigned upload URL bound to this exact length.
+    CancelJobResponse:
+      type: object
+      required:
+      - job_id
+      - state
+      - cancel_requested
+      properties:
+        job_id:
+          type: string
+          description: Identifier of the job.
+        state:
+          $ref: '#/components/schemas/JobState'
+        cancel_requested:
+          type: boolean
+          description: Always true once cancellation has been recorded.
+    CreateJobResponse:
+      type: object
+      required:
+      - job_id
+      properties:
+        job_id:
+          type: string
+          description: Identifier for the new job.
+        context_upload_url:
+          type: string
+          format: uri
+          description: Presigned PUT URL for the context archive. Present only when `context_bytes` was supplied. Upload with Content-Type `application/gzip` before calling submitJob.
     RunnerSize:
       type: string
       description: Latchkey runner t-shirt size. Determines vCPU and memory.
@@ -442,6 +391,57 @@ components:
       - medium
       - large
       - xlarge
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+          description: Human-readable description of the problem.
+    JobState:
+      type: string
+      description: Job lifecycle state. `succeeded`, `failed`, `cancelled` and `expired` are terminal.
+      enum:
+      - created
+      - queued
+      - provisioning
+      - running
+      - succeeded
+      - failed
+      - cancelled
+      - expired
+  responses:
+    RateLimited:
+      description: Per-organization job creation quota exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The key is valid but lacks the required scope, or the organization is not entitled.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid API key.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: No such job for this organization.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: The request was malformed or exceeded a documented limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
     JobId:
       name: id

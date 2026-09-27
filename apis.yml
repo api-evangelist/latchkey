@@ -14,7 +14,7 @@ tags:
   - GitHub Actions
   - Ephemeral Compute
   - Build & Test Infrastructure
-  - agent-native
+  - Agent-Native
   - AI Coding Agents
   - Developer Tools
 tags_raw:
@@ -26,6 +26,7 @@ tags_raw:
   - Agent-Native
   - AI Coding Agents
   - Developer Tools
+  - agent-native
 apis:
 - aid: latchkey:latchkey-jobs-api
   name: Latchkey Jobs API Jobs API
