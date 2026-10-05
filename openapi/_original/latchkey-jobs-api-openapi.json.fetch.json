@@ -1,0 +1,12 @@
+{
+ "url": "https://latchkey.dev/openapi.json",
+ "requested_url": "https://latchkey.dev/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 19049,
+ "sha256": "27ef418ffd8f146eb1c86b94c72c8e5b49bb4e0618206a80d3570aba901dca72",
+ "fetched_at": "2026-10-04",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "Re-fetched from the provider by verify-openapi-sources.py; the archived file is byte-identical to what the provider serves."
+}
