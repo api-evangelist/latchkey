@@ -181,7 +181,103 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    NotFound:
+      description: No such job for this organization.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid API key.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: The request was malformed or exceeded a documented limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Per-organization job creation quota exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The key is valid but lacks the required scope, or the organization is not entitled.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
+    JobLogsResponse:
+      type: object
+      required:
+      - chunks
+      - next_cursor
+      - complete
+      properties:
+        chunks:
+          type: array
+          description: Ordered log chunks from the requested cursor.
+          items:
+            $ref: '#/components/schemas/JobLogChunk'
+        next_cursor:
+          type: integer
+          description: Cursor to pass on the next poll.
+        complete:
+          type: boolean
+          description: True once the job is terminal and all logs have been returned.
+    CancelJobResponse:
+      type: object
+      required:
+      - job_id
+      - state
+      - cancel_requested
+      properties:
+        job_id:
+          type: string
+          description: Identifier of the job.
+        state:
+          $ref: '#/components/schemas/JobState'
+        cancel_requested:
+          type: boolean
+          description: Always true once cancellation has been recorded.
+    RunnerSize:
+      type: string
+      description: Latchkey runner t-shirt size. Determines vCPU and memory.
+      enum:
+      - small
+      - medium
+      - large
+      - xlarge
+    CreateJobResponse:
+      type: object
+      required:
+      - job_id
+      properties:
+        job_id:
+          type: string
+          description: Identifier for the new job.
+        context_upload_url:
+          type: string
+          format: uri
+          description: Presigned PUT URL for the context archive. Present only when `context_bytes` was supplied. Upload with Content-Type `application/gzip` before calling submitJob.
+    JobLogChunk:
+      type: object
+      required:
+      - index
+      - content
+      properties:
+        index:
+          type: integer
+          description: Zero-based chunk index.
+        content:
+          type: string
+          description: Raw log text for this chunk.
     Error:
       type: object
       required:
@@ -240,6 +336,18 @@ components:
           - string
           - 'null'
           format: date-time
+    JobState:
+      type: string
+      description: Job lifecycle state. `succeeded`, `failed`, `cancelled` and `expired` are terminal.
+      enum:
+      - created
+      - queued
+      - provisioning
+      - running
+      - succeeded
+      - failed
+      - cancelled
+      - expired
     JobListResponse:
       type: object
       required:
@@ -250,14 +358,6 @@ components:
           description: Jobs, newest first.
           items:
             $ref: '#/components/schemas/JobListItem'
-    RunnerSize:
-      type: string
-      description: Latchkey runner t-shirt size. Determines vCPU and memory.
-      enum:
-      - small
-      - medium
-      - large
-      - xlarge
     CreateJobRequest:
       type: object
       required:
@@ -326,75 +426,6 @@ components:
           - string
           - 'null'
           format: date-time
-    JobLogChunk:
-      type: object
-      required:
-      - index
-      - content
-      properties:
-        index:
-          type: integer
-          description: Zero-based chunk index.
-        content:
-          type: string
-          description: Raw log text for this chunk.
-    JobLogsResponse:
-      type: object
-      required:
-      - chunks
-      - next_cursor
-      - complete
-      properties:
-        chunks:
-          type: array
-          description: Ordered log chunks from the requested cursor.
-          items:
-            $ref: '#/components/schemas/JobLogChunk'
-        next_cursor:
-          type: integer
-          description: Cursor to pass on the next poll.
-        complete:
-          type: boolean
-          description: True once the job is terminal and all logs have been returned.
-    CancelJobResponse:
-      type: object
-      required:
-      - job_id
-      - state
-      - cancel_requested
-      properties:
-        job_id:
-          type: string
-          description: Identifier of the job.
-        state:
-          $ref: '#/components/schemas/JobState'
-        cancel_requested:
-          type: boolean
-          description: Always true once cancellation has been recorded.
-    CreateJobResponse:
-      type: object
-      required:
-      - job_id
-      properties:
-        job_id:
-          type: string
-          description: Identifier for the new job.
-        context_upload_url:
-          type: string
-          format: uri
-          description: Presigned PUT URL for the context archive. Present only when `context_bytes` was supplied. Upload with Content-Type `application/gzip` before calling submitJob.
-    JobState:
-      type: string
-      description: Job lifecycle state. `succeeded`, `failed`, `cancelled` and `expired` are terminal.
-      enum:
-      - created
-      - queued
-      - provisioning
-      - running
-      - succeeded
-      - failed
-      - cancelled
-      - expired
     SubmitJobResponse:
       type: object
       required:
@@ -411,37 +442,6 @@ components:
           - boolean
           - 'null'
           description: Whether a context archive was found for this job.
-  responses:
-    Unauthorized:
-      description: Missing or invalid API key.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    RateLimited:
-      description: Per-organization job creation quota exceeded.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Forbidden:
-      description: The key is valid but lacks the required scope, or the organization is not entitled.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: No such job for this organization.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: The request was malformed or exceeded a documented limit.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   parameters:
     JobId:
       name: id
