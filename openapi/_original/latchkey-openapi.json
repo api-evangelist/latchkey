@@ -1,0 +1,1041 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Latchkey Jobs API",
+    "version": "1.0.0",
+    "summary": "Run a single command on a fresh Latchkey runner, with no GitHub in the path.",
+    "description": "The Jobs API gives a coding agent or CI system direct access to an ephemeral Latchkey runner. A job runs ONE command on a fresh Ubuntu 24.04 x86_64 machine that is destroyed afterwards. Nothing registers with GitHub, so jobs keep running when GitHub Actions is unavailable.\n\nTypical lifecycle: create a job, optionally upload a context archive to the returned presigned URL, submit it, then poll status and stream logs until a terminal state.\n\nThe Model Context Protocol server is documented separately at https://latchkey.dev/.well-known/mcp/manifest.json.\n\nAuthentication is a Latchkey API key sent as a bearer token. Keys are created in the Latchkey dashboard and carry scopes: `jobs:read` for status, logs and listing; `jobs:run` for create, submit and cancel.",
+    "contact": {
+      "name": "Latchkey Support",
+      "url": "https://latchkey.dev/support",
+      "email": "support@latchkey.dev"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://latchkey.dev/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.latchkey.dev",
+      "description": "Production"
+    }
+  ],
+  "externalDocs": {
+    "description": "Latchkey CLI and agent documentation",
+    "url": "https://latchkey.dev/documentation/latchkey-cli"
+  },
+  "security": [
+    {
+      "latchkeyApiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Jobs",
+      "description": "Create, submit, observe and cancel runner jobs."
+    }
+  ],
+  "paths": {
+    "/jobs": {
+      "post": {
+        "operationId": "createJob",
+        "tags": ["Jobs"],
+        "summary": "Create a job",
+        "description": "Reserves a job in state `created` and returns its id. If `context_bytes` is supplied, the response includes a presigned URL to upload a gzipped tar archive of your working tree before submitting. Creating a job does not start it; call submitJob next.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was malformed or exceeded a documented limit. Also answered for a budget_usd above the workspace's spend limit, with code JOB_BUDGET_ABOVE_WORKSPACE_CAP and budget_usd and limit_usd beside it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "The key is valid but lacks the required scope, or the organization is not entitled. Also answered when the job's batch has reached its budget, with code JOB_BATCH_BUDGET_REACHED and the batch, budget_usd and spent_usd beside it. Also answered at the workspace's spend limit, with code JOB_CREATION_BLOCKED_SPEND_CAP_REACHED and limit_usd, spent_usd, resets_at and remedy beside it, and past the free allowance on a workspace with no plan, with code JOB_CREATION_BLOCKED_FREE_ALLOWANCE_REACHED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "get": {
+        "operationId": "listJobs",
+        "tags": ["Jobs"],
+        "summary": "List recent jobs",
+        "description": "Returns recent jobs for the organization that owns the API key, newest first. Served from durable storage, so it outlives an individual job record and can answer what was run last week.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum jobs to return.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of jobs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/JobId"
+        }
+      ],
+      "get": {
+        "operationId": "getJob",
+        "tags": ["Jobs"],
+        "summary": "Get job status",
+        "description": "Returns the current state of one job, including exit code and failure reason once terminal (a skipped job carries neither). A submitted job that has not started within one hour is reported as `expired`.",
+        "responses": {
+          "200": {
+            "description": "Current job status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/jobs/{id}/submit": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/JobId"
+        }
+      ],
+      "post": {
+        "operationId": "submitJob",
+        "tags": ["Jobs"],
+        "summary": "Submit a job for execution",
+        "description": "Moves a job from `created` to `queued` and enqueues a runner for it. A job this call's own dispatch ends instead answers with its terminal state and `failure_reason`. Only a job in `created` may be submitted, so a failed or cancelled job can never be resubmitted. Upload the context archive first if you created the job with `context_bytes`.",
+        "responses": {
+          "200": {
+            "description": "Job queued, or ended by this call's own dispatch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitJobResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Job is not in a submittable state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/batches/{batch}/budget": {
+      "parameters": [
+        {
+          "name": "batch",
+          "in": "path",
+          "required": true,
+          "description": "The batch's name as its jobs are created with, percent-encoded as one path segment.",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      ],
+      "put": {
+        "operationId": "setBatchBudget",
+        "tags": ["Jobs"],
+        "summary": "Set or lower a batch's budget",
+        "description": "Sets the budget of a batch of jobs in US dollars. A batch with no budget takes any amount. A batch with one takes the same or a lower amount, and a higher amount is refused with 409 and changes nothing. Once the batch's jobs have cost the budget at list rates, a new job in the batch is refused and its queued jobs are held, while running jobs finish. Requires the jobs:run scope.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBatchBudgetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The batch's budget and spend.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchBudgetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The amount or the batch's name is not in the accepted form.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "The key lacks the jobs:run scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The amount is above the batch's current budget. Nothing changed. Also answered for a first budget above the workspace's spend limit, with code JOB_BATCH_BUDGET_ABOVE_WORKSPACE_CAP and batch, budget_usd and limit_usd beside it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/logs": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/JobId"
+        }
+      ],
+      "get": {
+        "operationId": "getJobLogs",
+        "tags": ["Jobs"],
+        "summary": "Read job logs",
+        "description": "Returns ordered log chunks from the given cursor. Poll with the returned `next_cursor` until `complete` is true to stream a running job's output.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Chunk index to read from. Omit to start at the beginning.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "required": false,
+            "description": "true to read the end of the log: the page holds whole chunks ending at the last chunk written, and next_cursor resumes after it, so the next read returns only newer chunks. Cannot be combined with cursor.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "include_steps",
+            "in": "query",
+            "required": false,
+            "description": "true adds the job's step list and the chunk count a finished job ended with. A job that runs one command has no step list.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log chunks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobLogsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "tail and cursor were both given (code JOB_LOGS_TAIL_WITH_CURSOR), tail was asked for a finished job whose log end is not known (code JOB_LOGS_TAIL_END_UNKNOWN), or cursor is not a non-negative integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "410": {
+            "description": "The job finished more than 7 days ago and its log is no longer kept. The body is the flat error with code JOB_LOGS_PAST_RETENTION.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/JobId"
+        }
+      ],
+      "post": {
+        "operationId": "cancelJob",
+        "tags": ["Jobs"],
+        "summary": "Cancel a job",
+        "description": "Requests cancellation. A job that has not started is cancelled immediately; a running job is signalled and terminalises shortly after. Cancellation is idempotent.",
+        "responses": {
+          "200": {
+            "description": "Cancellation recorded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelJobResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "latchkeyApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A Latchkey API key, sent as `Authorization: Bearer lk_live_...`. Create one in the Latchkey dashboard. Scopes: `jobs:read` for getJob, getJobLogs and listJobs; `jobs:run` for createJob, submitJob and cancelJob."
+      }
+    },
+    "parameters": {
+      "JobId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Job id returned by createJob.",
+        "schema": {
+          "type": "string",
+          "pattern": "^cli-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "examples": ["cli-3f2a1b4c-5d6e-7f80-91a2-b3c4d5e6f708"]
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "The request was malformed or exceeded a documented limit.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The key is valid but lacks the required scope, or the organization is not entitled.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No such job for this organization.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Per-organization job creation quota exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "RunnerSize": {
+        "type": "string",
+        "description": "Latchkey runner t-shirt size. Determines vCPU and memory.",
+        "enum": ["small", "medium", "large", "xlarge"]
+      },
+      "JobState": {
+        "type": "string",
+        "description": "Job lifecycle state. `succeeded`, `failed`, `cancelled`, `skipped` and `expired` are terminal.",
+        "enum": [
+          "created",
+          "queued",
+          "provisioning",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled",
+          "skipped",
+          "expired"
+        ]
+      },
+      "CreateJobRequest": {
+        "type": "object",
+        "required": ["command", "runner_size"],
+        "properties": {
+          "command": {
+            "type": "string",
+            "maxLength": 16384,
+            "description": "The single shell command to run on the runner.",
+            "examples": ["npm ci && npm test"]
+          },
+          "runner_size": {
+            "$ref": "#/components/schemas/RunnerSize"
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Environment variables for the command. At most 64 keys and 32768 bytes total.",
+            "maxProperties": 64
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 10800,
+            "default": 1800,
+            "description": "Wall-clock limit for the command."
+          },
+          "context_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 209715200,
+            "description": "Byte length of the gzipped tar archive you intend to upload. Supplying it returns a presigned upload URL bound to this exact length."
+          },
+          "batch": {
+            "type": "string",
+            "description": "Batch this job belongs to: a name of 1 to 64 characters that groups the jobs of one piece of work. Shown on the job and kept on its billing row."
+          },
+          "budget_usd": {
+            "type": "number",
+            "description": "A budget in US dollars with at most two decimal places. The job is stopped once it has cost this much at its size's list rate, counted in whole minutes. Refused when it buys less than one minute on the size. Optional."
+          }
+        }
+      },
+      "CreateJobResponse": {
+        "type": "object",
+        "required": [
+          "job_id",
+          "job_url",
+          "concurrency",
+          "rate_usd_per_minute",
+          "budget_usd",
+          "budget_minutes",
+          "batch_budget_usd",
+          "batch_spent_usd"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "Identifier for the new job."
+          },
+          "context_upload_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Presigned PUT URL for the context archive. Present only when `context_bytes` was supplied. Upload with Content-Type `application/gzip` before calling submitJob."
+          },
+          "job_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The job's page in the Latchkey dashboard."
+          },
+          "concurrency": {
+            "type": ["object", "null"],
+            "description": "This workspace's limit of jobs running at once and its use when this answer was built; null when they could not be read. A store that answers partly can make `running` read low for one answer.",
+            "required": ["limit", "running", "queued", "as_of"],
+            "properties": {
+              "limit": {
+                "type": ["integer", "null"],
+                "description": "The most jobs this workspace runs at once; null when it has no limit."
+              },
+              "running": {
+                "type": "integer",
+                "description": "Jobs holding a place against the limit now, from assignment to completion."
+              },
+              "queued": {
+                "type": "integer",
+                "description": "This workspace's jobs waiting to be dispatched, not counting jobs waiting for the jobs they need."
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When these counts were read; they can be a few seconds old."
+              }
+            }
+          },
+          "rate_usd_per_minute": {
+            "type": ["number", "null"],
+            "description": "The list price of one minute on this job's runner size, in US dollars."
+          },
+          "budget_usd": {
+            "type": ["number", "null"],
+            "description": "The budget the job was created with, in US dollars. Null when none."
+          },
+          "budget_minutes": {
+            "type": ["integer", "null"],
+            "description": "The whole minutes the budget bought at the size's rate when the job was created. The job ends at the lesser of this and its timeout. Null when no budget."
+          },
+          "batch_budget_usd": {
+            "type": ["number", "null"],
+            "description": "The budget of the job's batch, in US dollars. Null when the job has no batch or its batch has no budget."
+          },
+          "batch_spent_usd": {
+            "type": ["number", "null"],
+            "description": "What the batch's jobs had cost at list rates when this job was created, in US dollars, counted in whole minutes and including jobs still running. Null when batch_budget_usd is null."
+          },
+          "spend_cap": {
+            "type": "object",
+            "description": "Present once this month's spend has crossed the lower notice percent of the workspace's spend limit: the limit, the spend, the percent, the notice percent crossed and when the limit resets.",
+            "required": ["limit_usd", "spent_usd", "percent", "notice_percent", "resets_at"],
+            "properties": {
+              "limit_usd": {
+                "type": "number"
+              },
+              "spent_usd": {
+                "type": "number"
+              },
+              "percent": {
+                "type": "integer"
+              },
+              "notice_percent": {
+                "type": "integer"
+              },
+              "resets_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "SubmitJobResponse": {
+        "type": "object",
+        "required": ["job_id", "state"],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "Identifier of the submitted job."
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState"
+          },
+          "context_present": {
+            "type": ["boolean", "null"],
+            "description": "Whether a context archive was found for this job."
+          },
+          "failure_reason": {
+            "type": "string",
+            "description": "Present only when this submit call's own inline dispatch ended the job. A job that is merely queued or held has no reason yet, and a job that ends later reports it through the status route."
+          },
+          "failure_reason_source": {
+            "type": "string",
+            "enum": ["agent", "platform"],
+            "description": "agent when the reason is the word the job itself reported from the runner, platform when Latchkey wrote it; present exactly when failure_reason is."
+          },
+          "concurrency": {
+            "type": ["object", "null"],
+            "description": "This workspace's limit of jobs running at once and its use when this answer was built; null when they could not be read. A store that answers partly can make `running` read low for one answer.",
+            "required": ["limit", "running", "queued", "as_of"],
+            "properties": {
+              "limit": {
+                "type": ["integer", "null"],
+                "description": "The most jobs this workspace runs at once; null when it has no limit."
+              },
+              "running": {
+                "type": "integer",
+                "description": "Jobs holding a place against the limit now, from assignment to completion."
+              },
+              "queued": {
+                "type": "integer",
+                "description": "This workspace's jobs waiting to be dispatched, not counting jobs waiting for the jobs they need."
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When these counts were read; they can be a few seconds old."
+              }
+            }
+          },
+          "jobs_ahead": {
+            "type": ["integer", "null"],
+            "description": "This workspace's queued jobs that entered the queue before this one, or 0 once this job has been dispatched; null unless this job is queued. It does not promise an order of starting."
+          },
+          "queue_reason": {
+            "type": ["object", "null"],
+            "description": "Why a queued job is waiting, as a code and a sentence; null when no reason applies.",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "rate_usd_per_minute": {
+            "type": ["number", "null"],
+            "description": "The list price of one minute on this job's runner size, in US dollars."
+          }
+        }
+      },
+      "JobStatusResponse": {
+        "type": "object",
+        "required": ["job_id", "state", "runner_size", "timeout_seconds", "created_at"],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "Identifier of the job."
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState"
+          },
+          "runner_size": {
+            "$ref": "#/components/schemas/RunnerSize"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "description": "Wall-clock limit in seconds."
+          },
+          "cancel_requested": {
+            "type": "boolean",
+            "description": "Whether cancellation has been requested."
+          },
+          "exit_code": {
+            "type": ["integer", "null"],
+            "description": "Process exit code once the command has finished."
+          },
+          "failure_reason": {
+            "type": ["string", "null"],
+            "description": "Why the job failed, when it did."
+          },
+          "failure_reason_source": {
+            "type": ["string", "null"],
+            "enum": ["agent", "platform", null],
+            "description": "agent when the reason is the word the job itself reported from the runner, platform when Latchkey wrote it; null with no reason."
+          },
+          "failure_explanation": {
+            "type": ["string", "null"],
+            "description": "The failure in plain words, for the failures that have any. Null on every other outcome, including an ordinary nonzero exit."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submitted_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "started_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "batch": {
+            "type": ["string", "null"],
+            "description": "Batch the job was created in. Null when none was named."
+          },
+          "api_key_name": {
+            "type": ["string", "null"],
+            "description": "Name of the API key that created the job, as the key is named now. Null when no key created it or none was recorded."
+          },
+          "concurrency": {
+            "type": ["object", "null"],
+            "description": "This workspace's limit of jobs running at once and its use when this answer was built; null when they could not be read. A store that answers partly can make `running` read low for one answer.",
+            "required": ["limit", "running", "queued", "as_of"],
+            "properties": {
+              "limit": {
+                "type": ["integer", "null"],
+                "description": "The most jobs this workspace runs at once; null when it has no limit."
+              },
+              "running": {
+                "type": "integer",
+                "description": "Jobs holding a place against the limit now, from assignment to completion."
+              },
+              "queued": {
+                "type": "integer",
+                "description": "This workspace's jobs waiting to be dispatched, not counting jobs waiting for the jobs they need."
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When these counts were read; they can be a few seconds old."
+              }
+            }
+          },
+          "jobs_ahead": {
+            "type": ["integer", "null"],
+            "description": "This workspace's queued jobs that entered the queue before this one, or 0 once this job has been dispatched; null unless this job is queued. It does not promise an order of starting."
+          },
+          "queue_reason": {
+            "type": ["object", "null"],
+            "description": "Why a queued job is waiting, as a code and a sentence; null when no reason applies.",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "rate_usd_per_minute": {
+            "type": ["number", "null"],
+            "description": "The list price of one minute on this job's runner size, in US dollars."
+          },
+          "cost_so_far_usd": {
+            "type": ["number", "null"],
+            "description": "The list-rate cost of the minutes this job has run since it last started, in US dollars, counted in whole minutes rounded up and before free minutes; null unless the job is running."
+          },
+          "last_output_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When Latchkey last learned of new log output from this job since it last started, to within about 10 seconds; null before the first such output or when not known."
+          },
+          "budget_usd": {
+            "type": ["number", "null"],
+            "description": "The budget the job was created with, in US dollars. Null when none."
+          },
+          "budget_minutes": {
+            "type": ["integer", "null"],
+            "description": "The whole minutes the budget bought at the size's rate when the job was created. The job ends at the lesser of this and its timeout. Null when no budget."
+          },
+          "needs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The job keys this job waited on before it could start, as its workflow file names them. An empty list when it waited on none. Absent when they were not recorded, as for a job started from the command line or one created before dependencies were stored."
+          }
+        }
+      },
+      "JobListItem": {
+        "type": "object",
+        "required": ["job_id", "conclusion", "runner_size", "command_label", "queued_at"],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "Identifier of the job."
+          },
+          "conclusion": {
+            "type": "string",
+            "description": "Terminal outcome, or an empty string while the job is still in flight."
+          },
+          "runner_size": {
+            "type": "string",
+            "description": "Runner size the job ran on."
+          },
+          "command_label": {
+            "type": "string",
+            "description": "Binary plus first subcommand, with arguments scrubbed."
+          },
+          "exit_code": {
+            "type": ["integer", "null"],
+            "description": "Process exit code."
+          },
+          "duration_ms": {
+            "type": "integer",
+            "description": "Run duration in milliseconds."
+          },
+          "queued_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the job entered the queue. For a job that needs other jobs this is still its queue entry, not the instant its needs released it."
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the job reached its terminal state; null while it is in flight."
+          },
+          "failure_reason": {
+            "type": ["string", "null"],
+            "description": "Why the job failed, when it did."
+          },
+          "failure_reason_source": {
+            "type": ["string", "null"],
+            "enum": ["agent", "platform", null],
+            "description": "agent when the reason is the word the job itself reported from the runner, platform when Latchkey wrote it; null with no reason."
+          },
+          "failure_explanation": {
+            "type": ["string", "null"],
+            "description": "The failure in plain words, for the failures that have any. Null on every other outcome, including an ordinary nonzero exit."
+          },
+          "batch": {
+            "type": ["string", "null"],
+            "description": "Batch the job was created in. Null when none was named."
+          },
+          "api_key_name": {
+            "type": ["string", "null"],
+            "description": "Name of the API key that created the job, as the key is named now. Null when no key created it or none was recorded."
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState",
+            "description": "The job's state on its durable record; after a failed write it can trail GET /jobs/{id} until the write is retried."
+          },
+          "started_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the job's command started; null before it starts."
+          },
+          "elapsed_seconds": {
+            "type": ["integer", "null"],
+            "description": "Whole seconds the job has run: since started_at while it runs, its duration once it has finished; null before it starts."
+          },
+          "cost_so_far_usd": {
+            "type": ["number", "null"],
+            "description": "The list-rate cost of the minutes this job has run since it last started, in US dollars, counted in whole minutes rounded up and before free minutes; null unless the job is running."
+          }
+        }
+      },
+      "JobListResponse": {
+        "type": "object",
+        "required": ["jobs"],
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "description": "Jobs, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/JobListItem"
+            }
+          }
+        }
+      },
+      "JobLogChunk": {
+        "type": "object",
+        "required": ["index", "content"],
+        "properties": {
+          "index": {
+            "type": "integer",
+            "description": "Zero-based chunk index."
+          },
+          "content": {
+            "type": "string",
+            "description": "Raw log text for this chunk."
+          }
+        }
+      },
+      "JobLogsResponse": {
+        "type": "object",
+        "required": ["chunks", "next_cursor", "complete"],
+        "properties": {
+          "chunks": {
+            "type": "array",
+            "description": "Ordered log chunks from the requested cursor.",
+            "items": {
+              "$ref": "#/components/schemas/JobLogChunk"
+            }
+          },
+          "next_cursor": {
+            "type": "integer",
+            "description": "Cursor to pass on the next poll."
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "True once the job is terminal and all logs have been returned."
+          },
+          "log_high_water": {
+            "type": ["integer", "null"],
+            "description": "The chunk count a finished job ended with, 0 for a job that never reached a runner, and null while it runs or when the count is not known. Present only with include_steps."
+          },
+          "steps": {
+            "type": ["object", "null"],
+            "description": "The job's step list; null for a job that runs one command. Present only with include_steps."
+          }
+        }
+      },
+      "CancelJobResponse": {
+        "type": "object",
+        "required": ["job_id", "state", "cancel_requested"],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "Identifier of the job."
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState"
+          },
+          "cancel_requested": {
+            "type": "boolean",
+            "description": "Always true once cancellation has been recorded."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable description of the problem."
+          }
+        }
+      },
+      "SetBatchBudgetRequest": {
+        "type": "object",
+        "required": ["budget_usd"],
+        "properties": {
+          "budget_usd": {
+            "type": "number",
+            "description": "The batch's budget in US dollars with at most two decimal places."
+          }
+        }
+      },
+      "BatchBudgetResponse": {
+        "type": "object",
+        "required": ["batch", "budget_usd", "spent_usd"],
+        "properties": {
+          "batch": {
+            "type": "string",
+            "description": "The batch's name."
+          },
+          "budget_usd": {
+            "type": "number",
+            "description": "The batch's budget in US dollars after this request."
+          },
+          "spent_usd": {
+            "type": "number",
+            "description": "What the batch's jobs have cost at list rates, in US dollars, counted in whole minutes and including jobs still running."
+          }
+        }
+      }
+    }
+  }
+}

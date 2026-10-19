@@ -1,0 +1,12 @@
+{
+ "url": "https://latchkey.dev/openapi.json",
+ "final": "https://latchkey.dev/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 39697,
+ "sha256": "9f11fbd42c9ade1a906a27de8a885abf58e1ede0c41d8e42857f4d133ccb49ac",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}
