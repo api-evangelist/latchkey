@@ -884,3 +884,9 @@ components:
 externalDocs:
   description: Latchkey CLI and agent documentation
   url: https://latchkey.dev/documentation/latchkey-cli
+x-provenance:
+  method: harvested
+  publisher: Latchkey Jobs API
+  source: https://latchkey.dev/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
