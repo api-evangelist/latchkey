@@ -1,4 +1,4 @@
-# latchkey-jobs-api
+# Latchkey Jobs API
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -65,3 +65,119 @@
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
 Managed ephemeral GitHub Actions runners that repair failing builds mid-run. The Jobs API gives coding agents and CI systems direct access to a fresh Ubuntu 24.04 x86_64 runner that runs one command and is then destroyed, with a hosted MCP server, CLI, and llms.txt for agent-native access.
+
+**Areas:** CI/CD · DevOps · GitHub Actions · Ephemeral Compute · Build & Test Infrastructure · Agent-Native · AI Coding Agents · Developer Tools
+
+## Latchkey Jobs API on APIs.io
+
+Everything profiled for Latchkey Jobs API is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/latchkey/](https://apis.io/providers/latchkey/)** — or go straight to one of the APIs or properties below.
+
+### APIs (1)
+
+- [Latchkey Jobs API Jobs API](https://apis.io/apis/latchkey/latchkey-jobs-api/) — Create, submit, observe and cancel runner jobs.
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [mcp](https://apis.io/servers/latchkey/mcp/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Latchkey Jobs Api Overlay](https://apis.io/overlays/latchkey/latchkey-jobs-api-overlay/)
+
+#### Security (3)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Latchkey Authentication](https://apis.io/security/latchkey/latchkey-authentication/)
+- [Latchkey Domain Security](https://apis.io/security/latchkey/latchkey-domain-security/)
+- [Latchkey Vulnerability Disclosure](https://apis.io/security/latchkey/latchkey-vulnerability-disclosure/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Latchkey Plans Pricing](https://apis.io/plans/latchkey/latchkey-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Latchkey Rate Limits](https://apis.io/rate-limits/latchkey/latchkey-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://latchkey.dev/)
+- [Documentation](https://latchkey.dev/documentation)
+- [Getting started](https://latchkey.dev/documentation/quickstart)
+- [Pricing](https://latchkey.dev/pricing)
+- [Support](https://latchkey.dev/support)
+- [Blog](https://latchkey.dev/blog)
+- [Security](https://latchkey.dev/documentation/security-architecture)
+- [Terms of service](https://latchkey.dev/terms)
+- [Privacy policy](https://latchkey.dev/privacy)
+- [GitHub](https://github.com/latchkey-dev)
+
+## API Evangelist rating
+
+**Kin Score 52.3** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 75.0 |
+| Contract quality | 53.3 |
+| Contract governance | 4.5 |
+| Operational transparency | 34.2 |
+| Developer ergonomics | 54.8 |
+| Access clarity | 69.7 |
+
+**Agent readiness 32.2** — agent-ready
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | documented (partial credit) |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | documented (partial credit) |
+| Error Semantics | derived (partial credit) |
+| OpenAPI Examples | — |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | yes |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | na |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 30.4** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/latchkey/](https://apis.io/providers/latchkey/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Latchkey Jobs API: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/latchkey/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
